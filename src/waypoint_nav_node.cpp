@@ -27,6 +27,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "thornbots_nav/route_core.hpp"
+#include "thornbots_nav/square_core.hpp"
 
 namespace thornbots_nav
 {
@@ -39,8 +40,19 @@ class WaypointNav : public rclcpp::Node
 {
 public:
   WaypointNav()
-  : Node("waypoint_nav"), core_(load_params())
+  : Node("waypoint_nav")
   {
+    // "pipes": the match route below; "square": the off-field test square.
+    const auto route = declare_parameter("route", std::string("pipes"));
+    if (route == "pipes") {
+      core_.emplace(load_params());
+    } else if (route == "square") {
+      square_.emplace(
+        declare_parameter("square_side_m", rclcpp::PARAMETER_DOUBLE).get<double>(),
+        declare_parameter("square_tolerance_m", rclcpp::PARAMETER_DOUBLE).get<double>());
+    } else {
+      throw std::invalid_argument("route must be pipes or square, got " + route);
+    }
     // Same frame mcb_relay uses for RELOCALIZE: the MCB's corrected navigation frame.
     frame_id_ = declare_parameter("goal_frame", std::string("nav_odom"));
     const double rate_hz = declare_parameter("rate_hz", 10.0);
@@ -55,12 +67,18 @@ public:
     ref_sub_ = create_subscription<RefSysStatus>(
       "/dji_serial_bridge/ref_sys", rclcpp::SensorDataQoS(),
       [this](RefSysStatus::ConstSharedPtr m) {
-        core_.on_ref_sys(m->is_on_blue_team, m->robot_hp, m->game_stage);
+        if (core_) {
+          core_->on_ref_sys(m->is_on_blue_team, m->robot_hp, m->game_stage);
+        }
         log_target();
       });
     odom_sub_ = create_subscription<Odometry>(
       odom_topic, 10, [this](Odometry::ConstSharedPtr m) {
-        core_.on_pose(m->pose.pose.position.x, m->pose.pose.position.y);
+        if (core_) {
+          core_->on_pose(m->pose.pose.position.x, m->pose.pose.position.y);
+        } else {
+          square_->on_pose(m->pose.pose.position.x, m->pose.pose.position.y);
+        }
         log_target();
       });
     // Node clock, so lockstep sim time paces it like every other input.
@@ -92,21 +110,26 @@ private:
     return p;
   }
 
+  std::optional<Goal> goal() const
+  {
+    return core_ ? core_->goal() : square_->goal();
+  }
+
   void log_target()
   {
-    const auto goal = core_.goal();
+    const auto goal = this->goal();
     if (!goal || (last_index_ && *last_index_ == goal->index)) {
       return;
     }
     last_index_ = goal->index;
     RCLCPP_INFO(
       get_logger(), "Target %zu at (%.3f, %.3f), %s", goal->index, goal->x, goal->y,
-      core_.direction() > 0 ? "outbound" : "returning");
+      !core_ ? "square" : core_->direction() > 0 ? "outbound" : "returning");
   }
 
   void publish()
   {
-    const auto goal = core_.goal();
+    const auto goal = this->goal();
     if (!goal) {
       return;
     }
@@ -119,7 +142,8 @@ private:
     pub_->publish(msg);
   }
 
-  RouteCore core_;
+  std::optional<RouteCore> core_;
+  std::optional<SquareCore> square_;
   std::string frame_id_;
   std::optional<std::size_t> last_index_;
   rclcpp::Publisher<PointStamped>::SharedPtr pub_;

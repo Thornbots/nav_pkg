@@ -31,6 +31,9 @@ def generate_launch_description():
             'params_file', default_value=os.path.join(share, 'config', 'route.yaml'),
             description='Route parameters YAML.'),
         DeclareLaunchArgument(
+            'route', default_value='pipes', choices=['pipes', 'square'],
+            description='pipes: the match route; square: off-field 1 m test square.'),
+        DeclareLaunchArgument(
             'use_sim_time', default_value='false',
             description='Use /clock; NAV_GOAL stamps follow the node clock.'),
         Node(
@@ -40,7 +43,8 @@ def generate_launch_description():
             output='screen',
             parameters=[
                 LaunchConfiguration('params_file'),
-                {'use_sim_time': ParameterValue(
+                {'route': LaunchConfiguration('route'),
+                 'use_sim_time': ParameterValue(
                     LaunchConfiguration('use_sim_time'), value_type=bool)},
             ],
         ),
