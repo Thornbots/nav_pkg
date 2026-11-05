@@ -12,3 +12,6 @@ waypoint_nav:
     advance_hp_ratio: 0.99     # head out again at hp > this fraction
     in_game_stage: 4           # RoboMaster game stage IN_GAME
     rate_hz: 10.0              # NAV_GOAL publish rate
+    # route:=square (off-field test): loop a square from the first pose, +x then +y.
+    square_side_m: 1.0
+    square_tolerance_m: 0.2       # > firmware SPIN_START_RADIUS 0.15: advance before spinning

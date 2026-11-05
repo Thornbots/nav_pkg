@@ -15,7 +15,7 @@ find_package(nav_msgs REQUIRED)
 find_package(dji_serial_bridge REQUIRED)
 
 # Pure logic (no rclcpp), unit-tested standalone.
-add_library(route_core STATIC src/route_core.cpp)
+add_library(route_core STATIC src/route_core.cpp src/square_core.cpp)
 target_compile_features(route_core PUBLIC cxx_std_17)
 target_include_directories(route_core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -31,6 +31,8 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(test_route_core test/test_route_core.cpp)
   target_link_libraries(test_route_core route_core)
+  ament_add_gtest(test_square_core test/test_square_core.cpp)
+  target_link_libraries(test_square_core route_core)
 
   # Launch-file lint; see setup.cfg for why the anyio plugin is disabled.
   find_package(ament_cmake_pytest REQUIRED)

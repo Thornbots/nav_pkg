@@ -19,8 +19,9 @@ ros2 launch thornbots_nav waypoint_nav.launch.py
 ros2 topic echo /dji_serial_bridge/nav_goal
 ```
 
-Launch arguments: `params_file` (default `config/route.yaml`) and
-`use_sim_time` (default `false`).
+Launch arguments: `params_file` (default `config/route.yaml`), `route`
+(`pipes`, the default, or `square`) and `use_sim_time` (default `false`).
+From the robot stack, pass `nav_route:=square` to `auto.launch.py`.
 
 ## Topics
 
@@ -61,6 +62,17 @@ Blue mirrors the red route (`x → −x`).
 | 2 | East through the 0.745 m doorway | −2.40 | −0.635 | 0.2 |
 | 3 | P: pipes point, +y of the bucket at (0, −3.0) | 0.00 | −2.40 | 0.5 |
 
+## Square test route
+
+`route:=square` is for testing off the field. The first `/localization/odom`
+pose is corner 0, and the robot loops +1 m x, then +1 m y, then back, then
+home (`square_side_m`). The square is not mirrored for blue, and it ignores
+REF_SYS (HP, game stage, team), so it runs with no referee. A corner counts as
+reached within `square_tolerance_m` (0.2 m). That is outside the firmware's
+0.15 m spin radius, so the robot moves to the next corner without stopping to
+spin. Under RMUL 3v3 referee data the firmware still holds the robot before the
+countdown.
+
 ## Parameters
 
 [config/route.yaml](config/route.yaml) is the source of defaults and is
@@ -88,5 +100,5 @@ the same frame. Raw `/odom` boots at (0, 0) at the physical start and cannot.
 colcon test --packages-select thornbots_nav && colcon test-result --verbose
 ```
 
-`test_route_core` covers the route logic without ROS; the pytest suite lints the
+`test_route_core` and `test_square_core` cover the route logic without ROS; the pytest suite lints the
 launch file.
