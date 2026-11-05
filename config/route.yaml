@@ -1,0 +1,14 @@
+# Red-team field coordinates (metres); blue mirrors x -> -x.
+# Index 0 = H (Starting Zone centre), 1 = north out of the zone on the doorway
+# centreline, 2 = east through the 0.745 m doorway, 3 = P (pipes point).
+# Floats must keep a decimal point: ROS rejects an integer for a double.
+waypoint_nav:
+  ros__parameters:
+    waypoints_x: [-5.25, -5.25, -2.40, 0.00]
+    waypoints_y: [-3.00, -0.635, -0.635, -2.40]
+    tolerances_m: [0.5, 0.05, 0.2, 0.5]  # per-waypoint arrival radius
+    max_hp: 400.0              # ARCC sentry; REF_SYS carries no max HP
+    retreat_hp_ratio: 0.5525   # go home at hp <= this fraction of max_hp
+    advance_hp_ratio: 0.99     # head out again at hp > this fraction
+    in_game_stage: 4           # RoboMaster game stage IN_GAME
+    rate_hz: 10.0              # NAV_GOAL publish rate
