@@ -12,7 +12,5 @@ Python is for launch. Route defaults live only in [config/route.yaml](config/rou
 
 ## Open
 
-- `ros.yml` in the workspace does not list `nav_pkg` as a portable package yet, so
-  package CI is rejected until it does.
-- Arrival is measured on `/odom`; confirm it is field-centred
-  ([README](README.md#frames)).
+- Package CI runs on `main` only; its pinned workspace `ros.yml` must list
+  `nav_pkg` before the first promotion (workspace nightly lists it).

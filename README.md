@@ -2,12 +2,15 @@
 
 `waypoint_nav` walks a fixed four-point route and publishes the current
 waypoint as the MCB's NAV_GOAL. The firmware does the driving. The route logic
-is ported from the firmware's `SimpleAutoDriveCommand`, without its stuck timer
-or spin (the firmware keeps both).
+is ported from the firmware's former `SimpleAutoDriveCommand`, without its
+stuck timer. The firmware's `AutoDriveCommand` holds a field quarter turn while
+travelling and spins only at a goal
+([MCBV3 README](../firmware/MCBV3/README.md#aim-and-navigation-odometry)).
 
 ## Run
 
-In a container terminal, with `dji_serial_bridge` and `pose_translator` running:
+`thornbots_pkg`'s `auto.launch.py` starts it with the rest of the robot stack.
+Standalone, in a container terminal with `dji_serial_bridge` and localization running:
 
 ```bash
 colcon build --packages-select thornbots_nav
@@ -24,7 +27,7 @@ Launch arguments: `params_file` (default `config/route.yaml`) and
 | Topic | Type | QoS | Direction |
 | --- | --- | --- | --- |
 | `/dji_serial_bridge/ref_sys` | `dji_serial_bridge/msg/RefSysStatus` | SensorData | in: `game_stage`, `robot_hp`, `is_on_blue_team` |
-| `/odom` | `nav_msgs/msg/Odometry` | reliable, depth 10 | in: `pose.position` x/y |
+| `/localization/odom` | `nav_msgs/msg/Odometry` | reliable, depth 10 | in: `pose.position` x/y |
 | `/dji_serial_bridge/nav_goal` | `geometry_msgs/msg/PointStamped` | reliable, depth 10 | out, at `rate_hz` |
 
 Nothing is published until both a REF_SYS and an odometry message have arrived
@@ -68,15 +71,16 @@ values are finite, tolerances and `max_hp` are > 0 and
 0 < `retreat_hp_ratio` < `advance_hp_ratio` ≤ 1. `max_hp` is 400 because REF_SYS
 carries no maximum ([sentry context](../docs/ARCC_2026_SENTRY_CONTEXT.md)).
 
-Code-level options: `odom_topic` (default `/odom`) and `goal_frame` (default
-`nav_odom`).
+Code-level options: `odom_topic` (default `/localization/odom`) and
+`goal_frame` (default `nav_odom`).
 
 ## Frames
 
-Waypoints are field-centred metres. NAV_GOAL is in `nav_odom`. Raw `/odom`
-boots at (0, 0) at the physical start ([wire frames](../ros2_dji_serial_bridge/UART_PROTOCOL.md#message-types)),
-so arrival against these waypoints is only right if `/odom` is field-centred;
-otherwise point `odom_topic` at a field-centred source.
+Waypoints are field-centred metres, and NAV_GOAL is in `nav_odom`
+([wire frames](../ros2_dji_serial_bridge/UART_PROTOCOL.md#message-types)).
+Arrival uses `/localization/odom`, the field-centred `nav_odom` pose that
+`mcb_relay` relocalizes the MCB to, so the Jetson and the MCB judge goals in
+the same frame. Raw `/odom` boots at (0, 0) at the physical start and cannot.
 
 ## Tests
 

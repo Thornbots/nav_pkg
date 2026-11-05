@@ -47,7 +47,9 @@ public:
     if (!std::isfinite(rate_hz) || rate_hz <= 0.0) {
       throw std::invalid_argument("rate_hz must be finite and > 0");
     }
-    const auto odom_topic = declare_parameter("odom_topic", std::string("/odom"));
+    // Field-centred nav_odom pose that mcb_relay relocalizes the MCB to; raw /odom
+    // boots at (0, 0) at the physical start, so it cannot judge field waypoints.
+    const auto odom_topic = declare_parameter("odom_topic", std::string("/localization/odom"));
 
     pub_ = create_publisher<PointStamped>("/dji_serial_bridge/nav_goal", 10);
     ref_sub_ = create_subscription<RefSysStatus>(
@@ -61,7 +63,8 @@ public:
         core_.on_pose(m->pose.pose.position.x, m->pose.pose.position.y);
         log_target();
       });
-    timer_ = create_wall_timer(
+    // Node clock, so lockstep sim time paces it like every other input.
+    timer_ = create_timer(
       std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::duration<double>(1.0 / rate_hz)),
       [this]() {publish();});
