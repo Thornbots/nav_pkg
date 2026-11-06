@@ -78,7 +78,8 @@ countdown.
 [config/route.yaml](config/route.yaml) is the source of defaults and is
 required: `waypoints_x`, `waypoints_y`, `tolerances_m`, `max_hp`,
 `retreat_hp_ratio`, `advance_hp_ratio`, `in_game_stage`. `rate_hz` (default 10)
-is also set there. Startup throws unless the arrays have equal length ≥ 2, all
+is also set there. `nav_goal_none_topic` (default empty; the lockstep simulator sets it)
+publishes a `Header` on each tick that sends no NAV_GOAL. Startup throws unless the arrays have equal length ≥ 2, all
 values are finite, tolerances and `max_hp` are > 0 and
 0 < `retreat_hp_ratio` < `advance_hp_ratio` ≤ 1. `max_hp` is 400 because REF_SYS
 carries no maximum ([sentry context](../docs/ARCC_2026_SENTRY_CONTEXT.md)).
