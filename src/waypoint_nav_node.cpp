@@ -24,6 +24,7 @@
 
 #include "dji_serial_bridge/msg/ref_sys_status.hpp"
 #include "geometry_msgs/msg/point_stamped.hpp"
+#include "std_msgs/msg/header.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "thornbots_nav/route_core.hpp"
@@ -64,6 +65,11 @@ public:
     const auto odom_topic = declare_parameter("odom_topic", std::string("/localization/odom"));
 
     pub_ = create_publisher<PointStamped>("/dji_serial_bridge/nav_goal", 10);
+    // Lockstep: a Header at each tick that sends no NAV_GOAL (no goal yet).
+    const auto none_topic = declare_parameter("nav_goal_none_topic", std::string(""));
+    if (!none_topic.empty()) {
+      none_pub_ = create_publisher<std_msgs::msg::Header>(none_topic, 10);
+    }
     ref_sub_ = create_subscription<RefSysStatus>(
       "/dji_serial_bridge/ref_sys", rclcpp::SensorDataQoS(),
       [this](RefSysStatus::ConstSharedPtr m) {
@@ -131,6 +137,11 @@ private:
   {
     const auto goal = this->goal();
     if (!goal) {
+      if (none_pub_) {
+        std_msgs::msg::Header none;
+        none.stamp = now();
+        none_pub_->publish(none);
+      }
       return;
     }
     PointStamped msg;
@@ -147,6 +158,7 @@ private:
   std::string frame_id_;
   std::optional<std::size_t> last_index_;
   rclcpp::Publisher<PointStamped>::SharedPtr pub_;
+  rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr none_pub_;
   rclcpp::Subscription<RefSysStatus>::SharedPtr ref_sub_;
   rclcpp::Subscription<Odometry>::SharedPtr odom_sub_;
   rclcpp::TimerBase::SharedPtr timer_;

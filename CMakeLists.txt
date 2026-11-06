@@ -12,6 +12,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(dji_serial_bridge REQUIRED)
 
 # Pure logic (no rclcpp), unit-tested standalone.
@@ -22,7 +23,7 @@ target_include_directories(route_core PUBLIC
 
 add_executable(waypoint_nav src/waypoint_nav_node.cpp)
 target_link_libraries(waypoint_nav route_core)
-ament_target_dependencies(waypoint_nav rclcpp geometry_msgs nav_msgs dji_serial_bridge)
+ament_target_dependencies(waypoint_nav rclcpp geometry_msgs nav_msgs std_msgs dji_serial_bridge)
 
 install(TARGETS waypoint_nav DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME})
