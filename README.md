@@ -85,7 +85,10 @@ values are finite, tolerances and `max_hp` are > 0 and
 carries no maximum ([sentry context](../docs/ARCC_2026_SENTRY_CONTEXT.md)).
 
 Code-level options: `odom_topic` (default `/localization/odom`) and
-`goal_frame` (default `nav_odom`).
+`goal_frame` (default `nav_odom`). `epoch_zero_ready` (default false; the lockstep simulator
+sets it) publishes `~/epoch_zero_ready` once the referee subscription has a publisher: a
+best-effort sample sent before the subscription matches is lost, and the goal then starts a tick
+later in that run.
 
 ## Frames
 

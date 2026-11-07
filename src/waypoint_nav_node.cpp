@@ -87,6 +87,20 @@ public:
         }
         log_target();
       });
+    // Lockstep: a best-effort sample sent before a subscription has matched is lost, so
+    // the run waits (epoch zero, wall time) until the referee input has a publisher. The
+    // localization input appears only once the clock runs, and any later sample serves.
+    if (declare_parameter("epoch_zero_ready", false)) {
+      ready_pub_ = create_publisher<std_msgs::msg::Header>(
+        "~/epoch_zero_ready", rclcpp::QoS(1).reliable().transient_local());
+      ready_timer_ = create_wall_timer(
+        std::chrono::milliseconds(10), [this]() {
+          if (ref_sub_->get_publisher_count() > 0) {
+            ready_pub_->publish(std_msgs::msg::Header{});
+            ready_timer_->cancel();
+          }
+        });
+    }
     // Node clock, so lockstep sim time paces it like every other input.
     timer_ = create_timer(
       std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -161,7 +175,8 @@ private:
   rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr none_pub_;
   rclcpp::Subscription<RefSysStatus>::SharedPtr ref_sub_;
   rclcpp::Subscription<Odometry>::SharedPtr odom_sub_;
-  rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::TimerBase::SharedPtr timer_, ready_timer_;
+  rclcpp::Publisher<std_msgs::msg::Header>::SharedPtr ready_pub_;
 };
 
 }  // namespace thornbots_nav
