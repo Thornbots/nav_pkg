@@ -28,12 +28,12 @@ From the robot stack, pass `nav_route:=square` to `auto.launch.py`.
 | Topic | Type | QoS | Direction |
 | --- | --- | --- | --- |
 | `/dji_serial_bridge/ref_sys` | `dji_serial_bridge/msg/RefSysStatus` | SensorData | in: `game_stage`, `robot_hp`, `is_on_blue_team` |
-| `/localization/odom` | `nav_msgs/msg/Odometry` | reliable, depth 10 | in: `pose.position` x/y |
+| `/mcb/navigation_odom` | `nav_msgs/msg/Odometry` | reliable, depth 10 | in: `pose.position` x/y |
 | `/dji_serial_bridge/nav_goal` | `geometry_msgs/msg/PointStamped` | reliable, depth 10 | out, at `rate_hz` |
 
 Nothing is published until both a REF_SYS and an odometry message have arrived
 (the team is unknown before then). The goal's `header.stamp` is `now()`, `z` is 0
-and `frame_id` is `nav_odom`, the frame `mcb_relay` uses for RELOCALIZE and the
+and `frame_id` is `map` by default, the frame `mcb_relay` uses for absolute RELOCALIZE and the
 [wire owner](../ros2_dji_serial_bridge/UART_PROTOCOL.md#nav_goal-id0--navigation-goal)
 defines for NAV_GOAL.
 
@@ -64,7 +64,7 @@ Blue mirrors the red route (`x → −x`).
 
 ## Square test route
 
-`route:=square` is for testing off the field. The first `/localization/odom`
+`route:=square` is for testing off the field. The first `/mcb/navigation_odom`
 pose is corner 0, and the robot loops +1 m x, then +1 m y, then back, then
 home (`square_side_m`). The square is not mirrored for blue, and it ignores
 REF_SYS (HP, game stage, team), so it runs with no referee. A corner counts as
@@ -84,19 +84,23 @@ values are finite, tolerances and `max_hp` are > 0 and
 0 < `retreat_hp_ratio` < `advance_hp_ratio` ≤ 1. `max_hp` is 400 because REF_SYS
 carries no maximum ([sentry context](../docs/ARCC_2026_SENTRY_CONTEXT.md)).
 
-Code-level options: `odom_topic` (default `/localization/odom`) and
-`goal_frame` (default `nav_odom`). `epoch_zero_ready` (default false; the lockstep simulator
+Code-level options: `odom_topic` (default `/mcb/navigation_odom`) and
+`goal_frame` (default `map`). `epoch_zero_ready` (default false; the lockstep simulator
 sets it) publishes `~/epoch_zero_ready` once the referee subscription has a publisher: a
 best-effort sample sent before the subscription matches is lost, and the goal then starts a tick
 later in that run.
 
 ## Frames
 
-Waypoints are field-centred metres, and NAV_GOAL is in `nav_odom`
-([wire frames](../ros2_dji_serial_bridge/UART_PROTOCOL.md#message-types)).
-Arrival uses `/localization/odom`, the field-centred `nav_odom` pose that
-`mcb_relay` relocalizes the MCB to, so the Jetson and the MCB judge goals in
-the same frame. Raw `/odom` boots at (0, 0) at the physical start and cannot.
+Waypoints are field-centred metres. NAV_GOAL is labelled `map` with absolute
+localization; mapping/odometry-only launch paths set `goal_frame:=nav_odom`.
+Arrival consumes `/mcb/navigation_odom`, the relay's nominal held firmware
+position, so correction thresholds and step limits affect firmware and arrival
+together. Mismatched frames and nonfinite positions are ignored. No arrival
+pose exists before the first estimated application. The UART has no correction
+acknowledgement: after frame loss this estimate can differ from firmware until
+a retry. It is not independent localization. See the
+[relay contract](../thornbots_pkg/README.md#mcb_relay).
 
 ## Tests
 

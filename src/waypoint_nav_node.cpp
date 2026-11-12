@@ -55,14 +55,13 @@ public:
       throw std::invalid_argument("route must be pipes or square, got " + route);
     }
     // Same frame mcb_relay uses for RELOCALIZE: the MCB's corrected navigation frame.
-    frame_id_ = declare_parameter("goal_frame", std::string("nav_odom"));
+    frame_id_ = declare_parameter("goal_frame", std::string("map"));
     const double rate_hz = declare_parameter("rate_hz", 10.0);
     if (!std::isfinite(rate_hz) || rate_hz <= 0.0) {
       throw std::invalid_argument("rate_hz must be finite and > 0");
     }
-    // Field-centred nav_odom pose that mcb_relay relocalizes the MCB to; raw /odom
-    // boots at (0, 0) at the physical start, so it cannot judge field waypoints.
-    const auto odom_topic = declare_parameter("odom_topic", std::string("/localization/odom"));
+    // Follow the relay's held correction, including its gate and step limit.
+    const auto odom_topic = declare_parameter("odom_topic", std::string("/mcb/navigation_odom"));
 
     pub_ = create_publisher<PointStamped>("/dji_serial_bridge/nav_goal", 10);
     // Lockstep: a Header at each tick that sends no NAV_GOAL (no goal yet).
@@ -80,6 +79,11 @@ public:
       });
     odom_sub_ = create_subscription<Odometry>(
       odom_topic, 10, [this](Odometry::ConstSharedPtr m) {
+        if (m->header.frame_id != frame_id_ ||
+          !std::isfinite(m->pose.pose.position.x) || !std::isfinite(m->pose.pose.position.y))
+        {
+          return;
+        }
         if (core_) {
           core_->on_pose(m->pose.pose.position.x, m->pose.pose.position.y);
         } else {
