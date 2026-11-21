@@ -23,4 +23,4 @@ jobs:
     uses: Thornbots/thornbots_workspace/.github/workflows/ros.yml@66b5f645bc69a98fe6468d33de40684f18d5c749
     with:
       package-repo: nav_pkg
-      workspace-ref: 623955d991e934651a26833b8a4d8005e603bb69
+      workspace-ref: 073cbb7a3606eb2a4ac7a1e249490861707d5652
