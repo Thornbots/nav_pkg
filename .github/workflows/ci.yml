@@ -20,7 +20,7 @@ jobs:
     with:
       tooling-ref: 1d85c773b3c056b92ab717fba42188db11533717
   ros:
-    uses: Thornbots/thornbots_workspace/.github/workflows/ros.yml@66b5f645bc69a98fe6468d33de40684f18d5c749
+    uses: Thornbots/thornbots_workspace/.github/workflows/ros.yml@83a0e84847a50bcfac59d95719df9aa0037be8cd
     with:
       package-repo: nav_pkg
       workspace-ref: 073cbb7a3606eb2a4ac7a1e249490861707d5652
