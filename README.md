@@ -68,10 +68,10 @@ Blue mirrors the red route (`x → −x`).
 pose is corner 0, and the robot loops +1 m x, then +1 m y, then back, then
 home (`square_side_m`). The square is not mirrored for blue, and it ignores
 REF_SYS (HP, game stage, team), so it runs with no referee. A corner counts as
-reached within `square_tolerance_m` (0.2 m). That is outside the firmware's
-0.15 m spin radius, so the robot moves to the next corner without stopping to
-spin. Under RMUL 3v3 referee data the firmware still holds the robot before the
-countdown.
+reached within `square_tolerance_m` (0.2 m). This advances the goal before the
+[firmware's spin conditions](../firmware/MCBV3/README.md#aim-and-navigation-odometry)
+are met. Under RMUL 3v3 referee data the firmware still holds the robot before
+the countdown.
 
 ## Parameters
 
