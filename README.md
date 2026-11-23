@@ -58,9 +58,13 @@ Blue mirrors the red route (`x → −x`).
 | Index | Point | x (m) | y (m) | Tolerance (m) |
 | --- | --- | --- | --- | --- |
 | 0 | H: start/resupply, Starting Zone centre | −5.25 | −3.00 | 0.5 |
-| 1 | North out of the zone, on the doorway centreline | −5.25 | −0.635 | 0.05 |
-| 2 | East through the 0.745 m doorway | −2.40 | −0.635 | 0.2 |
+| 1 | North out of the zone, aligned with the doorway passage | −5.25 | −0.55 | 0.05 |
+| 2 | East through the doorway | −2.40 | −0.55 | 0.2 |
 | 3 | P: pipes point, +y of the bucket at (0, −3.0) | 0.00 | −2.40 | 0.5 |
+
+The through leg balances clearance from the staggered walls in the
+[field collision model](../sim/world/arcc_s2_3v3/cad/NOTES.md), leaving room for
+lateral error as the chassis enters the passage.
 
 ## Square test route
 

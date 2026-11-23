@@ -68,7 +68,7 @@ def test_arrival_uses_held_position():
         pose(held, -5.25, -3., frame='nav_odom')
         assert abs(goals[-1].point.y + 3.) < 1e-9
         pose(held, -5.25, -3.)
-        assert abs(goals[-1].point.y + .635) < 1e-9
+        assert abs(goals[-1].point.y + .55) < 1e-9
     finally:
         process.send_signal(signal.SIGINT)
         try:

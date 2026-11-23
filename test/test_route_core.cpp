@@ -30,13 +30,14 @@ constexpr int kPreGame = 2;
 constexpr double kFull = 400.0;
 constexpr double kBand = 280.0;  // between retreat (221) and advance (396)
 constexpr double kLow = 200.0;
+constexpr double kDoorwayY = -0.55;
 
 // Same values as config/route.yaml.
 RouteParams route_params()
 {
   RouteParams p;
   p.x = {-5.25, -5.25, -2.40, 0.00};
-  p.y = {-3.00, -0.635, -0.635, -2.40};
+  p.y = {-3.00, kDoorwayY, kDoorwayY, -2.40};
   p.tolerance_m = {0.5, 0.05, 0.2, 0.5};
   p.max_hp = 400.0;
   p.retreat_hp_ratio = 0.5525;
@@ -100,14 +101,14 @@ TEST(RouteCore, RedOutboundUsesPerWaypointTolerances)
   feed(core, -4.80, -3.0);  // 0.45 m from H, inside 0.5
   EXPECT_EQ(index_of(core), 1u);
 
-  feed(core, -5.25, -0.635 - 0.06);  // doorway centreline needs 0.05
+  feed(core, -5.25, kDoorwayY - 0.06);  // doorway alignment needs 0.05
   EXPECT_EQ(index_of(core), 1u);
-  feed(core, -5.25, -0.635 - 0.04);
+  feed(core, -5.25, kDoorwayY - 0.04);
   EXPECT_EQ(index_of(core), 2u);
 
-  feed(core, -2.40 + 0.21, -0.635);  // doorway needs 0.2
+  feed(core, -2.40 + 0.21, kDoorwayY);  // doorway needs 0.2
   EXPECT_EQ(index_of(core), 2u);
-  feed(core, -2.40 + 0.19, -0.635);
+  feed(core, -2.40 + 0.19, kDoorwayY);
   EXPECT_EQ(index_of(core), 3u);
 
   const auto goal = core.goal().value();
@@ -128,9 +129,9 @@ TEST(RouteCore, BlueMirrorsX)
   feed(core, 5.25, -3.0, kFull, kInGame, true);
   EXPECT_EQ(index_of(core), 1u);
   EXPECT_DOUBLE_EQ(core.goal()->x, 5.25);
-  EXPECT_DOUBLE_EQ(core.goal()->y, -0.635);
-  feed(core, 5.25, -0.635, kFull, kInGame, true);
-  feed(core, 2.40, -0.635, kFull, kInGame, true);
+  EXPECT_DOUBLE_EQ(core.goal()->y, kDoorwayY);
+  feed(core, 5.25, kDoorwayY, kFull, kInGame, true);
+  feed(core, 2.40, kDoorwayY, kFull, kInGame, true);
   EXPECT_EQ(index_of(core), 3u);
   EXPECT_DOUBLE_EQ(core.goal()->x, 0.0);
 
@@ -166,9 +167,9 @@ TEST(RouteCore, ReturningHomeIsAllowedInAnyStage)
   drive_out_to(core, 3);
   feed(core, 0.0, -2.4, kLow, kPreGame);  // retreat: 3 -> 2
   EXPECT_EQ(index_of(core), 2u);
-  feed(core, -2.4, -0.635, kLow, kPreGame);
+  feed(core, -2.4, kDoorwayY, kLow, kPreGame);
   EXPECT_EQ(index_of(core), 1u);
-  feed(core, -5.25, -0.635, kLow, kPreGame);
+  feed(core, -5.25, kDoorwayY, kLow, kPreGame);
   EXPECT_EQ(index_of(core), 0u);
 }
 
@@ -176,7 +177,7 @@ TEST(RouteCore, HeadingOutAgainWaitsForTheGame)
 {
   RouteCore core(route_params());
   drive_out_to(core, 1);
-  feed(core, -5.25, -0.635, kLow, kInGame);  // retreat, arrive at 1 -> 0
+  feed(core, -5.25, kDoorwayY, kLow, kInGame);  // retreat, arrive at 1 -> 0
   feed(core, -5.25, -3.0, kLow, kInGame);
   EXPECT_EQ(index_of(core), 0u);
   feed(core, -5.25, -3.0, kFull, kPreGame);  // healed, but not in game
@@ -212,9 +213,9 @@ TEST(RouteCore, RetreatFromPipesPointRetracesThePath)
   EXPECT_EQ(index_of(core), 2u);
   EXPECT_DOUBLE_EQ(core.goal()->x, -2.40);
 
-  feed(core, -2.40, -0.635, kLow);
+  feed(core, -2.40, kDoorwayY, kLow);
   EXPECT_EQ(index_of(core), 1u);
-  feed(core, -5.25, -0.635, kLow);
+  feed(core, -5.25, kDoorwayY, kLow);
   EXPECT_EQ(index_of(core), 0u);
   EXPECT_DOUBLE_EQ(core.goal()->y, -3.0);
 
@@ -227,11 +228,11 @@ TEST(RouteCore, RetreatMidLegGoesBackToTheWaypointJustLeft)
   RouteCore core(route_params());
   drive_out_to(core, 1);  // now heading for 2
   ASSERT_EQ(index_of(core), 2u);
-  feed(core, -4.0, -0.635, kLow);  // mid-leg, hurt
+  feed(core, -4.0, kDoorwayY, kLow);  // mid-leg, hurt
   EXPECT_EQ(index_of(core), 1u);  // not 0: no cutting the corner
   EXPECT_EQ(core.direction(), -1);
 
-  feed(core, -4.0, -0.635, kFull);  // healed mid-leg: resume toward 2
+  feed(core, -4.0, kDoorwayY, kFull);  // healed mid-leg: resume toward 2
   EXPECT_EQ(core.direction(), 1);
   EXPECT_EQ(index_of(core), 2u);
 }
