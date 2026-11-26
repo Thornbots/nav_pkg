@@ -58,9 +58,13 @@ Blue mirrors the red route (`x → −x`).
 | Index | Point | x (m) | y (m) | Tolerance (m) |
 | --- | --- | --- | --- | --- |
 | 0 | H: start/resupply, Starting Zone centre | −5.25 | −3.00 | 0.5 |
-| 1 | North out of the zone, on the doorway centreline | −5.25 | −0.635 | 0.05 |
-| 2 | East through the 0.745 m doorway | −2.40 | −0.635 | 0.2 |
+| 1 | North out of the zone, aligned with the doorway passage | −5.25 | −0.55 | 0.05 |
+| 2 | East through the doorway | −2.40 | −0.55 | 0.2 |
 | 3 | P: pipes point, +y of the bucket at (0, −3.0) | 0.00 | −2.40 | 0.5 |
+
+The through leg balances clearance from the staggered walls in the
+[field collision model](../sim/world/arcc_s2_3v3/cad/NOTES.md), leaving room for
+lateral error as the chassis enters the passage.
 
 ## Square test route
 
@@ -68,10 +72,10 @@ Blue mirrors the red route (`x → −x`).
 pose is corner 0, and the robot loops +1 m x, then +1 m y, then back, then
 home (`square_side_m`). The square is not mirrored for blue, and it ignores
 REF_SYS (HP, game stage, team), so it runs with no referee. A corner counts as
-reached within `square_tolerance_m` (0.2 m). That is outside the firmware's
-0.15 m spin radius, so the robot moves to the next corner without stopping to
-spin. Under RMUL 3v3 referee data the firmware still holds the robot before the
-countdown.
+reached within `square_tolerance_m` (0.2 m). This advances the goal before the
+[firmware's spin conditions](../firmware/MCBV3/README.md#aim-and-navigation-odometry)
+are met. Under RMUL 3v3 referee data the firmware still holds the robot before
+the countdown.
 
 ## Parameters
 
